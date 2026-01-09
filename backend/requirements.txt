@@ -1,22 +1,26 @@
-# Core FastAPI
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
-python-multipart==0.0.6
+# Build tools
+setuptools>=69.0.0
+wheel>=0.42.0
 
-# Audio Processing
-librosa==0.10.1
-soundfile==0.12.1
-numpy==1.24.3
-scipy==1.11.4
+# Core API
+fastapi==0.109.2
+uvicorn[standard]==0.27.1
+python-multipart==0.0.9
 
-# AI/ML - HuggingFace Transformers (Open Source!)
-transformers==4.36.0
-torch==2.1.0
-accelerate==0.25.0
-python-dotenv==1.0.0
+# Core numerical stack (Python 3.12 compatible)
+numpy>=1.26.4
+scipy>=1.12.0
+soundfile>=0.12.1
 
-# Data Processing
-pydantic==2.5.3
-pydantic-settings==2.1.0
+# Audio processing
+librosa==0.10.2
 
-# Note: CORS is built into FastAPI, no separate package needed
+# ML / AI
+torch>=2.2.0
+transformers>=4.38.0
+accelerate>=0.26.0
+
+# Config & validation
+python-dotenv>=1.0.1
+pydantic>=2.6.0
+pydantic-settings>=2.2.1
