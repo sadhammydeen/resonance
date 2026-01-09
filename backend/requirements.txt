@@ -9,8 +9,10 @@ soundfile==0.12.1
 numpy==1.24.3
 scipy==1.11.4
 
-# AI/ML
-openai==1.10.0
+# AI/ML - HuggingFace Transformers (Open Source!)
+transformers==4.36.0
+torch==2.1.0
+accelerate==0.25.0
 python-dotenv==1.0.0
 
 # Data Processing
