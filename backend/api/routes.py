@@ -1,5 +1,6 @@
 """
 API Routes for audio analysis and music interpretation
+NEW ARCHITECTURE: Uses expert system + local LLM
 """
 
 from fastapi import APIRouter, File, UploadFile, HTTPException, Form
@@ -8,16 +9,23 @@ from pathlib import Path
 import shutil
 import uuid
 from typing import Optional
+import logging
 
-from analysis.audio_analyzer import AudioAnalyzer
-from services.llm_service import ExplanationGenerator
+from orchestrator.music_orchestrator import MusicOrchestrator
+from services.local_llm_service import get_llm_service
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Create router
 analysis_router = APIRouter()
 
-# Initialize services
-audio_analyzer = AudioAnalyzer()
-explanation_generator = ExplanationGenerator()
+# Initialize orchestrator (expert system coordinator)
+orchestrator = MusicOrchestrator()
+
+# LLM service (lazy-loaded on first request)
+llm_service = None
 
 # Upload directory
 UPLOAD_DIR = Path("uploads")
@@ -59,32 +67,92 @@ async def analyze_audio(
         with file_path.open("wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
         
-        print(f"📁 Saved file: {file_path}")
+        logger.info(f"📁 Saved file: {file_path}")
         
-        # Analyze audio
-        print("🎵 Starting audio analysis...")
-        analysis_result = audio_analyzer.analyze(str(file_path))
+        # === NEW ARCHITECTURE ===
+        # Step 1: Orchestrator coordinates all experts
+        logger.info("🎵 Starting expert analysis...")
+        music_state = orchestrator.analyze(str(file_path))
         
-        # Convert to dict
-        analysis_dict = audio_analyzer.to_dict(analysis_result)
+        # Step 2: Get LLM service (lazy-loaded)
+        global llm_service
+        if llm_service is None:
+            logger.info("🤖 Loading LLM (first request only)...")
+            llm_service = get_llm_service(model_name="phi-2")
         
-        # Generate explanations
-        print("🤖 Generating explanations...")
-        explanations = explanation_generator.generate_full_explanation(
-            analysis_dict,
-            user_level=user_level
-        )
+        # Step 3: Generate explanation using local LLM
+        logger.info("🎨 Generating explanation...")
+        explanation = llm_service.generate_explanation(music_state)
         
-        # Combine results
+        # Step 4: Convert to API response format
         response_data = {
             "file_id": file_id,
             "filename": file.filename,
-            "analysis": analysis_dict,
-            "explanations": explanations,
+            "analysis": {
+                # Beat & Tempo
+                "rhythm": {
+                    "bpm": music_state.beat.bpm,
+                    "tempo_category": music_state.beat.tempo_category.value,
+                    "regularity": music_state.beat.beat_regularity,
+                    "density": music_state.beat.beat_density.value,
+                    "time_signature": music_state.beat.time_signature,
+                    "beat_positions": music_state.beat.beat_positions[:20]  # First 20 beats
+                },
+                
+                # Structure
+                "structure": {
+                    "total_sections": music_state.structure.total_sections,
+                    "repetition_ratio": music_state.structure.repetition_ratio,
+                    "pattern_type": music_state.structure.pattern_type.value,
+                    "sections": [
+                        {
+                            "start": s.start_time,
+                            "end": s.end_time,
+                            "similarity": s.similarity_score
+                        }
+                        for s in music_state.structure.sections
+                    ]
+                },
+                
+                # Energy
+                "energy": {
+                    "overall": music_state.energy.overall_energy.value,
+                    "has_buildup": music_state.energy.has_buildup,
+                    "has_release": music_state.energy.has_release,
+                    "arc": music_state.energy.energy_arc,
+                    "timeline": [
+                        {
+                            "time": m.time,
+                            "level": m.energy_level.value,
+                            "intensity": m.intensity,
+                            "tension": m.tension
+                        }
+                        for m in music_state.energy.timeline
+                    ]
+                },
+                
+                # Pattern Logic
+                "pattern": {
+                    "predictability": music_state.pattern.predictability,
+                    "variation": music_state.pattern.variation_level.value,
+                    "repetition_strength": music_state.pattern.repetition_strength,
+                    "surprise_moments": music_state.pattern.surprise_moments,
+                    "teaching_focus": music_state.pattern.teaching_focus
+                },
+                
+                # High-Level Insights
+                "insights": {
+                    "primary_characteristic": music_state.primary_characteristic,
+                    "learning_strategy": music_state.learning_strategy,
+                    "complexity": music_state.complexity_level.value
+                }
+            },
+            
+            "explanation": explanation,
             "user_level": user_level
         }
         
-        print("✅ Analysis complete!")
+        logger.info("✅ Analysis complete!")
         return JSONResponse(content=response_data)
         
     except Exception as e:
@@ -92,7 +160,7 @@ async def analyze_audio(
         if file_path.exists():
             file_path.unlink()
         
-        print(f"❌ Error during analysis: {e}")
+        logger.error(f"❌ Error during analysis: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail=f"Error analyzing audio: {str(e)}"
