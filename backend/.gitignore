@@ -12,7 +12,7 @@ dist/
 build/
 .env
 .venv
-env/
+*env/
 ENV/
 
 # IDE
