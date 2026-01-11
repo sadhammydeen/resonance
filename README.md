@@ -22,6 +22,9 @@ A complete music education system that analyzes songs and generates accessible e
 
 Music is structure, rhythm, tension, repetition — all visualizable without sound.
 
+
+<img width="2470" height="1542" alt="image" src="https://github.com/user-attachments/assets/9e23a4de-4a55-4fd6-b9fa-45e2ced437a8" />
+
 ---
 
 ## ✨ Key Features
