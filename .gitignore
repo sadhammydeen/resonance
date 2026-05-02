@@ -119,3 +119,57 @@ checkpoints/
 *.h5
 *.pkl
 *.pickle
+
+# AI assistant / agentic tool artifacts
+CLAUDE.md
+.claude/
+.gemini/
+.aider*
+.cursor/
+.cursorrules
+.windsurfrules
+.copilot/
+.github/copilot-instructions.md
+
+# Secrets & API keys
+*.pem
+*.key
+secrets.json
+secrets.yaml
+secrets.yml
+.secrets/
+
+# Generated / processed audio output
+backend/output/
+backend/processed/
+*.mp3
+*.wav
+*.m4a
+*.flac
+*.ogg
+
+# Frontend environment files
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# Python type-checking & linting caches
+.mypy_cache/
+.ruff_cache/
+.pytype/
+
+# Test & coverage artifacts
+test-results/
+coverage/
+*.lcov
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Misc runtime
+*.pid
+*.seed
+*.lock
+!package-lock.json
+!poetry.lock
